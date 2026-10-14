@@ -142,3 +142,7 @@ El código se mantiene en el repositorio independiente `albertocamps/frecuencia-
 ## Alta de cliente al agendar
 
 El formulario de cita permite elegir Cliente existente o Nuevo cliente. Para alguien nuevo solo se piden nombre, teléfono y notas opcionales. El resumen revisa también esos datos. Cliente y cita se guardan juntos en una única escritura cifrada al confirmar; cerrar el formulario no crea fichas. Si el teléfono ya existe, se indica qué cliente debe elegirse. El correo ya no se solicita ni se utiliza en la búsqueda. Las bóvedas y copias anteriores siguen abriéndose aunque contengan el antiguo campo opcional de correo. El dictado o texto para un nombre nuevo prepara su nombre y pide el teléfono en este mismo flujo.
+
+## Nombre e icono instalado
+
+La aplicación se llama Frecuencia Oreka, también en el nombre corto del manifest y en iPhone. Su logo principal es el ojo geométrico aprobado: crema sobre verde salvia y pupila terracota. Los PNG versionados están en public/icons; el icono maskable de Android tiene margen adicional. El original de generación y la propuesta visual se conservan localmente en .sites-runtime/artwork, fuera del código publicado. Los iconos anteriores se conservan como recursos antiguos sin referencias activas. El id de instalación y el almacenamiento de la agenda no cambian. Un acceso directo ya instalado puede conservar su nombre o icono hasta que el sistema lo actualice o se vuelva a añadir a inicio; no es necesario borrar los datos del navegador.

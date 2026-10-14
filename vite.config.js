@@ -10,7 +10,7 @@ function agendaOffline() {
     generateBundle(_, bundle) {
       const entry = Object.values(bundle).find(file => file.type === 'chunk' && file.isEntry && file.facadeModuleId?.replaceAll('\\', '/').endsWith('/index.html'))
       if (!entry) throw new Error('No se encuentra la entrada de la agenda para preparar el modo sin conexión.')
-      const files = new Set(['/', '/index.html', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'])
+      const files = new Set(['/', '/index.html', '/manifest.webmanifest', '/icons/oreka-eye-192-v2.png', '/icons/oreka-eye-512-v2.png', '/icons/oreka-eye-maskable-v2.png', '/icons/oreka-eye-apple-v2.png', '/icons/oreka-eye-favicon-v2.png'])
       const visit = name => {
         if (files.has(`/${name}`)) return
         files.add(`/${name}`)

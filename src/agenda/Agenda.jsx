@@ -18,7 +18,7 @@ function Icon({ name, size = 22 }) {
   }
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name] || paths.calendar}</svg>
 }
-function Brand() { return <div className="brand"><span className="brand-symbol" aria-hidden="true">❋</span><span>frecuencia oreka<small>MI ESPACIO</small></span></div> }
+function Brand() { return <div className="brand"><img className="brand-symbol" src="/icons/oreka-eye-192-v2.png" alt="" aria-hidden="true" width="44" height="44" /><span>Frecuencia Oreka<small>MI ESPACIO</small></span></div> }
 function Field({ label, children, ...props }) { return <label className="field" {...props}><span>{label}</span>{children}</label> }
 function Modal({ title, children, onClose, wide = false }) {
   const ref = useRef(null)
