@@ -40,7 +40,7 @@ export async function decrypt(record, key) {
   if (data.version !== 1 || !Array.isArray(data.clients) || !Array.isArray(data.appointments) || !data.settings) throw new Error('La copia no tiene un formato válido.')
   const isString = value => typeof value === 'string'
   const unique = list => new Set(list.map(item => item.id)).size === list.length
-  if (!unique(data.clients) || !unique(data.appointments) || data.clients.some(c => !isString(c.id) || !/^[a-f0-9]{32}$/.test(c.id) || !isString(c.name) || !c.name.trim() || !isString(c.phone) || !isString(c.email) || !isString(c.notes))) throw new Error('Las fichas de la copia no son válidas.')
+  if (!unique(data.clients) || !unique(data.appointments) || data.clients.some(c => !isString(c.id) || !/^[a-f0-9]{32}$/.test(c.id) || !isString(c.name) || !c.name.trim() || !isString(c.phone) || (c.email !== undefined && !isString(c.email)) || !isString(c.notes))) throw new Error('Las fichas de la copia no son válidas.')
   if (data.appointments.some(a => !/^[a-f0-9]{32}$/.test(a.id) || !data.clients.some(c => c.id === a.clientId) || !['masaje', 'tarot', 'emocional'].includes(a.service) || !['active', 'cancelled'].includes(a.status) || !['app', 'google'].includes(a.destination) || !isString(a.date) || !isString(a.time) || !isString(a.notes) || !isString(a.location) || !Number.isInteger(Number(a.duration)) || a.duration < 5 || a.duration > 480 || (a.destination === 'google' && (!isString(a.calendarId) || !a.calendarId)) || (a.eventId && !/^[a-v0-9]{5,1024}$/.test(a.eventId)))) throw new Error('Las citas de la copia no son válidas.')
   return data
 }

@@ -38,6 +38,30 @@ export function validateAppointment(a, data) {
   if (!Number.isInteger(Number(a.duration)) || a.duration < 5 || a.duration > 480) throw new Error('La duración debe estar entre 5 y 480 minutos.')
   if (a.destination === 'google' && !a.calendarId) throw new Error('Elige primero un calendario en Ajustes.')
 }
+export function prepareClient(draft) {
+  const name = typeof draft.name === 'string' ? draft.name.trim() : ''
+  const phone = typeof draft.phone === 'string' ? draft.phone.trim() : ''
+  const notes = typeof draft.notes === 'string' ? draft.notes.trim() : ''
+  if (!name || name.length > 120) throw new Error('Indica el nombre del cliente.')
+  if (phone.length < 6 || phone.length > 30 || phone.replace(/\D/g, '').length < 6) throw new Error('Indica un teléfono válido para el cliente.')
+  if (notes.length > 2000) throw new Error('Las notas del cliente son demasiado largas.')
+  return { id: draft.id || uid(), name, phone, notes }
+}
+export function prepareAppointmentSave(data, draft) {
+  const { newClient, ...fields } = draft
+  let clients = data.clients
+  if (newClient) {
+    const client = prepareClient(newClient)
+    const digits = phone => phone.replace(/\D/g, '').replace(/^00/, '')
+    const existing = clients.find(c => digits(c.phone) === digits(client.phone))
+    if (existing) throw new Error('Ya existe un cliente con ese teléfono: ' + existing.name + '. Elígelo en Cliente existente.')
+    clients = [...clients, client]
+    fields.clientId = client.id
+  }
+  validateAppointment(fields, { ...data, clients })
+  const appointment = { ...fields, duration: Number(fields.duration), updatedAt: new Date().toISOString(), sync: fields.destination === 'google' ? 'pending' : 'local', syncError: '' }
+  return { appointment, data: { ...data, clients, appointments: [...data.appointments.filter(a => a.id !== appointment.id), appointment] } }
+}
 export function calendarDays(date, view) {
   if (view === 'day') return [date]
   const d = new Date(`${date}T12:00:00Z`)
@@ -54,7 +78,12 @@ export function parseRequest(text, clients, today = dateKey()) {
   const name = s.match(/(?:para|con)\s+(.+?)(?=\s+(?:el|hoy|manana|pasado|a las?|durante|de\s+\d)|[,.;]|$)/)?.[1]?.trim()
   const candidates = name ? clients.filter(c => normalize(c.name) === name || normalize(c.name).startsWith(`${name} `)) : []
   if (candidates.length === 1) draft.clientId = candidates[0].id
-  else questions.push(candidates.length > 1 ? `Hay varios clientes llamados ${name}. Elige cuál.` : 'Selecciona el cliente; si es nuevo, créalo primero en Clientes.')
+  else if (candidates.length > 1) questions.push(`Hay varios clientes llamados ${name}. Elige cuál.`)
+  else if (name) {
+    const spokenName = text.match(/(?:para|con)\s+(.+?)(?=\s+(?:el|hoy|mañana|manana|pasado|a las?|durante|de\s+\d)|[,.;]|$)/i)?.[1]?.trim() || name
+    draft.newClient = { name: spokenName, phone: '', notes: '' }
+    questions.push('Indica el teléfono del nuevo cliente; se guardará junto con la cita.')
+  } else questions.push('Elige un cliente existente o añade uno nuevo aquí.')
   if (/pasado manana/.test(s)) draft.date = dayShift(today, 2)
   else if (/\bmanana\b/.test(s.replace(/de la manana/g, ''))) draft.date = dayShift(today, 1)
   else if (/\bhoy\b/.test(s)) draft.date = today

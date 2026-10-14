@@ -23,13 +23,13 @@ El acceso es un desbloqueo criptográfico local, **no una cuenta ni autenticaci�
 ## Funciones disponibles
 
 - Inicio con sesiones de hoy, próximas sesiones, contadores y accesos a Agendar y Añadir cliente.
-- Crear, buscar, consultar y editar clientes; nombre, teléfono, correo y observaciones opcionales, e historial de sesiones canceladas incluidas.
+- Crear, buscar, consultar y editar clientes; nombre, teléfono y observaciones opcionales, e historial de sesiones canceladas incluidas.
 - Calendario por día, semana (desde lunes) y mes, navegación por fecha, tres colores con etiquetas de servicio.
 - Crear y editar/reprogramar sesiones, cancelar con confirmación y mantener su historial. Cliente, servicio, fecha, hora, duración, ubicación y notas.
 - Aviso de solapamiento, también cuando una sesión cruza medianoche; se puede confirmar expresamente un solapamiento.
 - Horarios en Europe/Madrid con independencia de la zona del teléfono. Se rechazan horas inexistentes o repetidas en el cambio estacional para pedir otra hora.
 - Agendar por texto; dictado Web Speech si el navegador lo admite y alternativa mediante el micrófono del teclado.
-- Interpretación **local y limitada**, sin LLM: servicios conocidos, cliente por nombre o prefijo, hoy/mañana/pasado mañana, próximo día de semana, fechas DD/MM/AAAA, horas numéricas y algunas expresadas en palabras, minutos, media hora, una hora y una hora y media. «Próximo martes» significa la siguiente aparición, excluyendo hoy. Las fechas sin año, días sin referencia inequívoca, clientes duplicados, horas sin franja y datos ausentes se dejan para aclarar en el formulario. Frases más complejas se corrigen en el resumen.
+- Interpretación **local y limitada**, sin LLM: servicios conocidos, cliente por nombre o prefijo, alta de cliente nuevo dentro de la cita, hoy/mañana/pasado mañana, próximo día de semana, fechas DD/MM/AAAA, horas numéricas y algunas expresadas en palabras, minutos, media hora, una hora y una hora y media. «Próximo martes» significa la siguiente aparición, excluyendo hoy. Las fechas sin año, días sin referencia inequívoca, clientes duplicados, horas sin franja y datos ausentes se dejan para aclarar en el formulario. Frases más complejas se corrigen en el resumen.
 - Resumen editable y confirmación explícita antes de guardar cualquier cita; nunca se guarda por el mero hecho de dictar.
 - Copia de seguridad cifrada y restauración desde el acceso. No existe recuperación de contraseña.
 - Bloqueo tras 5 minutos sin interacción o 1 minuto en segundo plano; bloqueo manual disponible. Si hay una escritura o petición en curso, termina esa operación antes de bloquear y no inicia más peticiones. Las peticiones tienen un límite de 20 segundos.
@@ -139,3 +139,6 @@ La app compila desde su carpeta independiente; sus 21 pruebas y ESLint pasan con
 En navegador se comprobaron el acceso inicial, alta de cliente, cita manual con resumen y confirmación, aparición en el calendario mensual y ancho móvil de 390 px. Quedan pendientes la instalación y dictado en teléfonos físicos, modo avión, recorrido completo de restauración y conexión con una cuenta real de Google.
 
 El código se mantiene en el repositorio independiente `albertocamps/frecuencia-oreka-App`. El repositorio no contiene fichas, copias de seguridad, tokens ni claves privadas. GitHub almacena el código; la app necesita su propio despliegue HTTPS para abrirse desde un teléfono fuera del equipo de desarrollo.
+## Alta de cliente al agendar
+
+El formulario de cita permite elegir Cliente existente o Nuevo cliente. Para alguien nuevo solo se piden nombre, teléfono y notas opcionales. El resumen revisa también esos datos. Cliente y cita se guardan juntos en una única escritura cifrada al confirmar; cerrar el formulario no crea fichas. Si el teléfono ya existe, se indica qué cliente debe elegirse. El correo ya no se solicita ni se utiliza en la búsqueda. Las bóvedas y copias anteriores siguen abriéndose aunque contengan el antiguo campo opcional de correo. El dictado o texto para un nombre nuevo prepara su nombre y pide el teléfono en este mismo flujo.

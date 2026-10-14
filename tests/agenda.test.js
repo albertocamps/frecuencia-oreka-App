@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { calendarDays, dayShift, emptyData, instant, madridParts, overlaps, parseRequest, validateAppointment } from '../src/agenda/domain.js'
+import { calendarDays, dayShift, emptyData, instant, madridParts, overlaps, parseRequest, validateAppointment, prepareClient, prepareAppointmentSave } from '../src/agenda/domain.js'
 import { eventPayload, remoteFields, syncAppointment } from '../src/agenda/google.js'
 import { decrypt, deriveKey, encrypt, newSalt } from '../src/agenda/vault.js'
 
@@ -120,11 +120,40 @@ test('eventos de día completo no sustituyen una sesión válida', () => {
 })
 test('copia cifrada se abre con contraseña correcta y detecta contraseña incorrecta o manipulación', async () => {
   const salt = newSalt(), key = await deriveKey('contraseña privada de prueba', salt)
-  const data = { ...emptyData(), clients: [{ id: 'abcd1234abcd1234abcd1234abcd1234', name: 'Ana García', phone: '600000000', email: '', notes: '' }] }
+  const data = { ...emptyData(), clients: [{ id: 'abcd1234abcd1234abcd1234abcd1234', name: 'Ana García', phone: '600000000', notes: '' }] }
   const record = await encrypt(data, key, salt, 1)
   assert.ok(!JSON.stringify(record).includes('García'))
   assert.deepEqual(await decrypt(record, key), data)
   const wrong = await deriveKey('otra contraseña', salt)
   await assert.rejects(() => decrypt(record, wrong))
   await assert.rejects(() => decrypt({ ...record, ciphertext: `AAAA${record.ciphertext.slice(4)}` }, key))
+})
+
+const diego = { id: 'bbbb1234bbbb1234bbbb1234bbbb1234', name: ' Diego ', phone: '611 222 333', notes: 'Primera visita' }
+test('cliente y cita nuevos se preparan juntos sin correo ni modificar los datos originales', () => {
+  const data = emptyData()
+  const { data: saved, appointment: session } = prepareAppointmentSave(data, appointment({ destination: 'app', newClient: diego }))
+  assert.equal(data.clients.length, 0); assert.equal(data.appointments.length, 0)
+  assert.equal(saved.clients.length, 1); assert.equal(saved.appointments.length, 1)
+  assert.equal(saved.clients[0].name, 'Diego'); assert.equal(session.clientId, diego.id)
+  assert.ok(!('email' in saved.clients[0])); assert.ok(!('newClient' in session))
+  assert.equal(saved.clients[0].notes, 'Primera visita')
+})
+test('si falta teléfono o la cita no es válida no se crea una ficha huérfana', () => {
+  const data = emptyData()
+  assert.throws(() => prepareAppointmentSave(data, appointment({ newClient: { ...diego, phone: '' } })), /teléfono/)
+  assert.throws(() => prepareAppointmentSave(data, appointment({ newClient: diego, duration: 0 })), /duración/)
+  assert.equal(data.clients.length, 0); assert.equal(data.appointments.length, 0)
+})
+test('un cliente existente se reutiliza y no se duplica por teléfono al dar de alta otro', () => {
+  const data = { ...emptyData(), clients: [prepareClient(diego)] }
+  const prepared = prepareAppointmentSave(data, appointment({ clientId: diego.id, destination: 'app' }))
+  assert.equal(prepared.data.clients.length, 1)
+  assert.throws(() => prepareAppointmentSave(data, appointment({ newClient: { ...diego, id: 'cccc1234cccc1234cccc1234cccc1234', phone: '611222333' } })), /Ya existe/)
+})
+test('texto para alguien nuevo prepara su nombre y pide el teléfono en la misma cita', () => {
+  const result = parseRequest('Agenda un masaje para Diego el próximo viernes a las cinco de la tarde durante una hora', clients, '2026-10-14')
+  assert.deepEqual(result.draft.newClient, { name: 'Diego', phone: '', notes: '' })
+  assert.equal(result.draft.time, '17:00'); assert.equal(result.draft.date, '2026-10-16')
+  assert.equal(result.questions.length, 1); assert.match(result.questions[0], /teléfono/)
 })
